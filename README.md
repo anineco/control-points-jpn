@@ -17,14 +17,9 @@
 ## 動作環境
 次のソフトウェアが必要である。
 - ```MySQL```
-- ```python``` + ```lxml```モジュール
+- ```python```
 - ```perl```
 - ```7z```
-
-```lxml```は、```pip```コマンドの他、MacPortsでは次のコマンドでインストールできる。
-```
-sudo port install py-lxml
-```
 
 ```7z```コマンドは、MacPortsでは次のコマンドでインストールできる。
 ```
@@ -51,7 +46,7 @@ sudo port install p7zip
 ./proc.sh
 ```
 
-このスクリプトは```./resources```ディレクトリの cab ファイルを読み込み、ファイルの展開とデータの抽出を行なって、```./output```ディレクトリの下にファイル名が```FG-GML-```で始まる txt ファイルを出力する。
+このスクリプトは```./resources```ディレクトリの cab ファイルを読み込み、ファイルの展開とデータの抽出を行なって、```./latest```ディレクトリの下にファイル名が```FG-GML-```で始まる xml ファイルを出力する。
 
 ### Step 3. sql ファイルの出力
 次の shell スクリプトを実行する。
@@ -59,16 +54,18 @@ sudo port install p7zip
 ./mksql.sh
 ```
 
-このスクリプトは```./output```ディレクトリの txt ファイルを読み込み、```./results```ディレクトリの下に```x_NNN.sql```というファイル名（NNN=000〜003）で sql ファイルを出力する。出力ファイルは、それぞれのファイルサイズが32MB以下になるように分割される。
+このスクリプトは```./latest```ディレクトリの xml ファイルを読み込み、```./results```ディレクトリの下に```x_NNN.sql```というファイル名（NNN=000〜）で sql ファイルを出力する。出力ファイルは、それぞれのファイルサイズが16MB以下になるように分割される。
 
 ### Step 4. データベースのテーブルの作成
 MySQLで次の SQL コマンドを実行し、テーブル```gcp```を作成する。なお、```CHARACTER SET```は```utf8mb4```、```COLLATE```は```utf8mb4_general_ci```とする。
 ```
 CREATE TABLE `gcp` (
+  `fid` varchar(255) NOT NULL COMMENT '基盤地図情報レコードID',
   `grade` tinyint NOT NULL COMMENT '等級',
   `pt` point NOT NULL /*!80003 SRID 4326 */ COMMENT '位置',
   `alt` decimal(7,3) NOT NULL COMMENT '標高',
   `name` varchar(255) NOT NULL COMMENT '点名',
+  UNIQUE KEY `fid` (`fid`),
   SPATIAL KEY `pt` (`pt`)
 );
 ```
@@ -81,7 +78,7 @@ CREATE TABLE `gcp` (
 4 三等三角点
 3 四等三角点
 2 標高点
-1 その他
+1 その他（廃止三角点、水準点）
 0 等高線
 ```
 
